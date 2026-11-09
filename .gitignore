@@ -1,0 +1,38 @@
+# =========================================================================
+# Participant data — NEVER commit. Contains subject IDs and name pinyin.
+# =========================================================================
+*.csv
+*.xlsx
+*.xls
+data/
+Data/
+RiskDM_Data_*
+RiskDM_Alpha_*
+RiskDM_FormalData_*
+
+# Generated figures / analysis outputs
+figures/
+*.png
+*.pdf
+*.svg
+!docs/**/*.png          # allow illustrative figures placed under docs/ if any
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
+
+# PsychoPy / MATLAB scratch
+*.psydat
+*.log
+*.asv
+*.mat
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -44,12 +44,26 @@ On each trial the participant:
    `adventure` (risk-encouraging), `conservative` (risk-averse), or `neutral`;
 2. after a fixation ISI (0.5 s), chooses between a **sure thing (ST)** — a smaller
    guaranteed amount — and a **risky gamble (RG)** — a larger amount at
-   probability *p*;
-3. after a random jitter, receives feedback (win amount, 1.0 s).
+   probability *p* — within 5 s;
+3. receives feedback (win amount, 1.0 s).
 
-**Win probabilities:** `[0.51, 0.63, 0.75, 0.83, 0.91]`, 8 trials each = **40
-trials**, with rejection sampling so the same probability never repeats 3× in a
-row. Prime conditions are split ~evenly across trials and shuffled.
+### Formal experiment (the analyzed dataset)
+
+- **Practice phase** (8 trials, no primes) to estimate each participant's baseline
+  risk parameter `alpha`, which initializes the formal task.
+- **9 blocks × 24 trials = 216 trials per participant.** Each block uses a
+  **single prime condition**; each condition appears in 3 blocks, and block order
+  is randomized across participants.
+- **Win probabilities:** 8 levels, `0.18–0.81` in steps of `0.09`, 3 trials each
+  per block. Sure-thing amounts range from 11 to 24; gamble amounts are capped at 100.
+- **Sample:** 31 participants were tested; 1 was excluded for guessing the purpose
+  of the experiment, leaving **30 participants and 6,480 trials** (2,160 per
+  condition; 7 timeouts, 0.11%).
+
+> **Note on `experiment/RiskDM_withpicture.m`.** The MATLAB script in this repo is
+> the **pilot version** of the task (a single run of 40 trials, 5 win probabilities
+> `[0.51, 0.63, 0.75, 0.83, 0.91]`, primes randomized trial by trial). The formal
+> experiment above used the block design; its task script will be added here.
 
 ### The adaptive staircase
 
@@ -81,19 +95,21 @@ within 5 s).
 
 ```
 experiment/
-  RiskDM_withpicture.m   MATLAB / Psychtoolbox — behavioral version (primary)
-  RiskDM_EEG.py          PsychoPy — EEG version, faithfully ported from the .m file
+  RiskDM_withpicture.m   MATLAB / Psychtoolbox — behavioral task (pilot version)
+  RiskDM_EEG.py          PsychoPy — EEG version, ported from the .m file
 analysis/
   visualize_riskdm.py    Python — merge per-subject data, QC, paired tests, figures
+  riskdm_glmm.R          R — trial-level logistic mixed models
+  requirements.txt       Python dependencies for the analysis
 ```
 
 ---
 
 ## The behavioral version (`RiskDM_withpicture.m`)
 
-MATLAB / Psychtoolbox. This is the primary, in-scope version: prime → decision →
-feedback, the adaptive staircase, and CSV output of per-trial choices plus the
-per-probability PSE table.
+MATLAB / Psychtoolbox: prime → decision → feedback, the adaptive staircase, and
+CSV output of per-trial choices plus the per-probability PSE table. This file is
+the pilot version of the task (see the note under *Task design*).
 
 ## The EEG version (`RiskDM_EEG.py`)
 
@@ -169,6 +185,48 @@ python analysis/visualize_riskdm.py --data-dir /path/to/your/xlsx
 
 (No data ships with the repo, so this runs against your own local data folder.)
 
+## Mixed models (`analysis/riskdm_glmm.R`)
+
+Trial-level logistic mixed models of risky choice (`RG` = 1, `ST` = 0; timeouts
+dropped), comparing a random-intercept model with one that adds **by-participant
+random slopes for prime condition**. The random-slopes model fits much better
+(likelihood-ratio χ²(5) = 178, p < .001) and is the one reported below. It also
+reports versions with `neutral` as the reference level and with win probability
+as a covariate.
+
+```bash
+Rscript analysis/riskdm_glmm.R /path/to/merged_trial_data.csv
+```
+
+The input is one merged CSV with one row per formal-task trial and columns
+`SubID`, `Condition`, `Choice_Num`, and `Probability`. Requires the `lme4` package.
+
+---
+
+## Results (behavioral, N = 30)
+
+**Risky choice shifted with the prime.** Participants chose the risky gamble most
+often after adventure primes and least often after conservative primes:
+
+| Condition | Risky-choice rate | Final Alpha (PSE) | Mean RT |
+|---|---:|---:|---:|
+| adventure | 0.537 | 0.805 | 1.21 s |
+| neutral | 0.463 | 0.829 | 1.22 s |
+| conservative | 0.414 | 0.830 | 1.22 s |
+
+| Comparison | Paired test (participant level) | Mixed model with random slopes |
+|---|---|---|
+| adventure vs. conservative | +12.3 pp, 95% CI [3.4, 21.2], t(29) = 2.83, p = .008, dz = 0.52 | OR = 1.88, 95% CI [1.19, 2.97], p = .007 |
+| adventure vs. neutral | +7.4 pp, 95% CI [1.8, 13.0], t(29) = 2.71, p = .011, dz = 0.50 | OR = 1.46, 95% CI [1.11, 1.93], p = .007 |
+| neutral vs. conservative | +4.9 pp, p = .055 | OR = 1.29, 95% CI [1.01, 1.64], p = .043 |
+
+**The staircase estimate did not move.** Final Alpha did not differ by condition
+(F(2, 58) = 0.80, p = .455), and neither did reaction time (F(2, 58) = 0.30,
+p = .741). The prime shifted immediate risky choices, but the block-end
+indifference estimate did not show reliable condition differences in this
+sample. Because `alpha` is adaptive and can carry over across blocks, it may be
+less sensitive to block-level manipulations than the choice rate itself.
+
 ---
 
 ## Requirements
@@ -176,6 +234,7 @@ python analysis/visualize_riskdm.py --data-dir /path/to/your/xlsx
 - **MATLAB** with Psychtoolbox-3 (behavioral version)
 - **Python 3.9+** with **PsychoPy** (EEG version)
 - **Python 3.9+** with pandas, matplotlib, seaborn, openpyxl, scipy (analysis)
+- **R** with `lme4` (mixed models)
 
 ---
 
@@ -183,8 +242,8 @@ python analysis/visualize_riskdm.py --data-dir /path/to/your/xlsx
 
 A two-track DURF (visual vs. auditory linguistic priming), run as parallel,
 independent studies with no shared data; this repository covers the **visual
-semantics** track. The behavioral paradigm and analysis pipeline are functional
-and were used to collect and analyze a first sample. The EEG paradigm is fully
+semantics** track. Behavioral data collection is complete (30 participants after
+exclusion), and the results above come from that sample. The EEG paradigm is fully
 implemented and an initial sample was collected, but the project was subsequently
 scoped to its behavioral component, so EEG collection is currently on hold. The
 design connects psycholinguistics (semantic priming) with neuroeconomics (risky

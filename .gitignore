@@ -36,3 +36,6 @@ env/
 Thumbs.db
 .idea/
 .vscode/
+
+# Prime stimuli (sentence images) are part of the task, not participant data
+!experiment/stimuli/**/*.png

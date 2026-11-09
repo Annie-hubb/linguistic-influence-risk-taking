@@ -26,10 +26,10 @@ can **direct, explicit** linguistic persuasion — language that encourages risk
 caution, or neither, and that carries no information about the gamble itself —
 **immediately bias risky choice**?
 
-To make the effect measurable rather than swamped by obvious choices, the task
-uses an adaptive staircase to estimate each participant's **Point of Subjective
-Equivalence (PSE)** per win-probability, pushing choices toward each person's own
-indifference threshold — where any shift in risk preference is most visible. With
+To make the effect measurable rather than swamped by obvious choices, each
+participant's risk preference is first calibrated with an adaptive staircase, and
+the formal task then presents gambles set at that person's own indifference
+point — where any shift in risk preference is most visible. With
 EEG, the question extends to the neural level: does the prime also change how the
 brain responds to the *outcome* of a risky choice, indexed by the reward
 positivity (RewP) to feedback?
@@ -38,56 +38,69 @@ positivity (RewP) to feedback?
 
 ## Task design
 
-On each trial the participant:
-
-1. views a **linguistic image prime** (2.0 s) from one of three conditions —
-   `adventure` (risk-encouraging), `conservative` (risk-averse), or `neutral`;
-2. after a fixation ISI (0.5 s), chooses between a **sure thing (ST)** — a smaller
-   guaranteed amount — and a **risky gamble (RG)** — a larger amount at
-   probability *p* — within 5 s;
-3. receives feedback (win amount, 1.0 s).
-
-### Formal experiment (the analyzed dataset)
-
-- **Practice phase** (8 trials, no primes) to estimate each participant's baseline
-  risk parameter `alpha`, which initializes the formal task.
-- **9 blocks × 24 trials = 216 trials per participant.** Each block uses a
-  **single prime condition**; each condition appears in 3 blocks, and block order
-  is randomized across participants.
-- **Win probabilities:** 8 levels, `0.18–0.81` in steps of `0.09`, 3 trials each
-  per block. Sure-thing amounts range from 11 to 24; gamble amounts are capped at 100.
-- **Sample:** 31 participants were tested; 1 was excluded for guessing the purpose
-  of the experiment, leaving **30 participants and 6,480 trials** (2,160 per
-  condition; 7 timeouts, 0.11%).
-
-> **Note on `experiment/RiskDM_withpicture.m`.** The MATLAB script in this repo is
-> the **pilot version** of the task (a single run of 40 trials, 5 win probabilities
-> `[0.51, 0.63, 0.75, 0.83, 0.91]`, primes randomized trial by trial). The formal
-> experiment above used the block design; its task script will be added here.
-
-### The adaptive staircase
-
-The gamble amount `RG` is set so that a participant with risk parameter `alpha`
-would be exactly indifferent between ST and RG:
+Each choice is between a **sure thing (ST)**, a smaller guaranteed amount, and a
+**risky gamble (RG)**, a larger amount won with probability *p*. The gamble is
+sized from a risk parameter `alpha` so that a person with that `alpha` would be
+exactly indifferent:
 
 ```
 RG = ST * (1/p)^(1/alpha)
 ```
 
-`alpha` is a per-probability indifference estimate (the PSE). After each choice it
-moves by a step that **shrinks with each reversal** (`0.1 → 0.05 → 0.02 → 0.005`),
-converging on the participant's true indifference point:
+A larger `alpha` means more risk-seeking. The study ran in two stages, each a
+separate MATLAB / Psychtoolbox script.
 
-- chose the **sure thing** → `alpha` decreases (more risk-averse than estimated);
-- chose the **gamble** → `alpha` increases (more risk-seeking than estimated);
-- clamped to `[0.2, 2.0]`.
+### Stage 1: baseline calibration (`experiment/RiskDM_Alphatest.m`)
 
-A larger final `alpha` = more risk-averse. Estimating the PSE per condition is a
-sensitive dependent measure: rather than only counting risky choices, it asks
-*how far* the prime shifted the indifference point.
+No primes. **5 blocks × 32 trials = 160 trials.** A single `alpha` is adjusted
+after every choice by a step that shrinks with each reversal
+(`0.1 → 0.05 → 0.02 → 0.01 → 0.005`, reversal count reset at the start of each
+block), clamped to `[0.2, 2.0]`:
+
+- chose the **sure thing** → `alpha` decreases;
+- chose the **gamble** → `alpha` increases.
+
+The participant's **baseline alpha** is the trimmed mean of the five block-final
+estimates (the highest and lowest are dropped). The experimenter enters it into
+Stage 2.
+
+### Stage 2: formal primed task (`experiment/RiskDM_imageFormal.m`)
+
+- **9 blocks × 24 trials = 216 trials per participant.** Each block uses a
+  **single prime condition**; each condition appears in 3 blocks. The first block's
+  condition is set by participant ID (ID mod 3) and each cycle of three is shuffled
+  with no condition repeated across a cycle boundary.
+- **Fixed offers.** Gambles are built from the participant's baseline alpha and do
+  **not** adapt during the task, so every offer sits near that person's own
+  indifference point. The logged `Trial_Indif_Alpha` = `ln(1/p) / ln(RG/ST)` is the
+  indifference point implied by the presented (rounded) amounts.
+- **Win probabilities:** 8 levels, `0.18–0.81` in steps of `0.09`, 3 trials each
+  per block. Sure-thing amounts range from 11 to 24; gamble amounts are capped at 100.
+  ST/RG screen sides are balanced within each block.
+- **Trial sequence:** sentence-image prime (2.0 s, shown at 1/3 size) → fixation
+  (0.8–1.2 s) → choice (≤ 5 s) → feedback (1.0 s) → fixation (0.8–1.2 s).
+  Blocks are separated by a 30 s enforced rest.
+- **Data safety:** every trial is appended to a UTF-8 text backup; if the run
+  stops early, completed trials are saved to a `CrashSaved_*.xlsx` file.
+- **Sample:** 31 participants were tested; 1 was excluded for guessing the purpose
+  of the experiment, leaving **30 participants and 6,480 trials** (2,160 per
+  condition; 7 timeouts, 0.11%).
+
+> **Running Stage 2:** the script reads the primes from a hard-coded lab path
+> (`base_img_path = 'F:\Desktop\risk\'`). Point it at `experiment/stimuli/` to run
+> it from this repo.
 
 **Choice coding:** `1 = RG (risky)`, `0 = ST (safe)`, `2 = Timeout` (no response
 within 5 s).
+
+### Stimuli (`experiment/stimuli/`)
+
+24 sentence images per condition, each a short Chinese phrase:
+`adventure` (risk-encouraging, e.g. *不入虎穴焉得虎子*), `conservative`
+(risk-averse, e.g. *见好就收落袋为安*), and `neutral` (everyday statements, e.g.
+*窗外树叶轻微晃动*). File names start with the condition letter and item number;
+a few names carry encoding artifacts from the lab machine and are kept as-is
+because the data logs refer to them by those exact names.
 
 ---
 
@@ -95,8 +108,11 @@ within 5 s).
 
 ```
 experiment/
-  RiskDM_withpicture.m   MATLAB / Psychtoolbox — behavioral task (pilot version)
-  RiskDM_EEG.py          PsychoPy — EEG version, ported from the .m file
+  RiskDM_Alphatest.m     Stage 1: baseline alpha calibration (staircase, no primes)
+  RiskDM_imageFormal.m   Stage 2: formal primed task (the analyzed dataset)
+  stimuli/               Prime images: adventure/, conservative/, neutral/
+  RiskDM_withpicture.m   Earlier pilot (40 trials, adaptive per-probability alpha)
+  RiskDM_EEG.py          PsychoPy EEG version, ported from the pilot
 analysis/
   visualize_riskdm.py    Python — merge per-subject data, QC, paired tests, figures
   riskdm_glmm.R          R — trial-level logistic mixed models
@@ -105,16 +121,17 @@ analysis/
 
 ---
 
-## The behavioral version (`RiskDM_withpicture.m`)
+## The pilot version (`RiskDM_withpicture.m`)
 
-MATLAB / Psychtoolbox: prime → decision → feedback, the adaptive staircase, and
-CSV output of per-trial choices plus the per-probability PSE table. This file is
-the pilot version of the task (see the note under *Task design*).
+An earlier single-run version: 40 trials, 5 win probabilities
+`[0.51, 0.63, 0.75, 0.83, 0.91]`, primes randomized trial by trial, and a separate
+adaptive `alpha` for each probability. It was used during development and is not
+the source of the analyzed data.
 
 ## The EEG version (`RiskDM_EEG.py`)
 
-A faithful PsychoPy port of the MATLAB paradigm (identical staircase, amounts, and
-sequencing) with the additions needed for ERP work. It was fully implemented and
+A faithful PsychoPy port of the pilot MATLAB paradigm (identical staircase,
+amounts, and sequencing) with the additions needed for ERP work. It was fully implemented and
 used to collect an initial sample before the project was scoped to behavior.
 
 **Photodiode triggers.** On the prime frame and on the feedback frame, a 200×200
@@ -208,11 +225,11 @@ The input is one merged CSV with one row per formal-task trial and columns
 **Risky choice shifted with the prime.** Participants chose the risky gamble most
 often after adventure primes and least often after conservative primes:
 
-| Condition | Risky-choice rate | Final Alpha (PSE) | Mean RT |
-|---|---:|---:|---:|
-| adventure | 0.537 | 0.805 | 1.21 s |
-| neutral | 0.463 | 0.829 | 1.22 s |
-| conservative | 0.414 | 0.830 | 1.22 s |
+| Condition | Risky-choice rate | Mean RT |
+|---|---:|---:|
+| adventure | 0.537 | 1.21 s |
+| neutral | 0.463 | 1.22 s |
+| conservative | 0.414 | 1.22 s |
 
 | Comparison | Paired test (participant level) | Mixed model with random slopes |
 |---|---|---|
@@ -220,12 +237,12 @@ often after adventure primes and least often after conservative primes:
 | adventure vs. neutral | +7.4 pp, 95% CI [1.8, 13.0], t(29) = 2.71, p = .011, dz = 0.50 | OR = 1.46, 95% CI [1.11, 1.93], p = .007 |
 | neutral vs. conservative | +4.9 pp, p = .055 | OR = 1.29, 95% CI [1.01, 1.64], p = .043 |
 
-**The staircase estimate did not move.** Final Alpha did not differ by condition
-(F(2, 58) = 0.80, p = .455), and neither did reaction time (F(2, 58) = 0.30,
-p = .741). The prime shifted immediate risky choices, but the block-end
-indifference estimate did not show reliable condition differences in this
-sample. Because `alpha` is adaptive and can carry over across blocks, it may be
-less sensitive to block-level manipulations than the choice rate itself.
+**Reaction time did not differ by condition** (F(2, 58) = 0.30, p = .741).
+
+Because offers in the formal task are fixed by each participant's baseline alpha,
+the risky-choice rate is the outcome measure. `Trial_Indif_Alpha` describes the
+offer that was shown, not the participant's response, so it is not used as a
+measure of the prime's effect.
 
 ---
 

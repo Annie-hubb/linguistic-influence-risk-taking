@@ -259,10 +259,9 @@ measure of the prime's effect.
 
 ## Project status
 
-A two-track DURF (visual vs. auditory linguistic priming), run as parallel,
-independent studies with no shared data; this repository covers the **visual
-semantics** track. Behavioral data collection is complete (30 participants after
-exclusion), and the results above come from that sample. The EEG paradigm is fully
+This repository covers my **visual semantics** study, in which primes are
+presented as written sentences. Behavioral data collection is complete (30
+participants after exclusion), and the results above come from that sample. The EEG paradigm is fully
 implemented, but the project was scoped to its behavioral component before any EEG
 data were collected. The design connects psycholinguistics (semantic priming) with
 neuroeconomics (risky choice and reward processing); the EEG extension would ask

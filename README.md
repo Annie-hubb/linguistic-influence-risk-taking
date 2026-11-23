@@ -1,20 +1,20 @@
 # The Neural Mechanisms of Direct Linguistic Influence on Risk-Taking: A Visual Semantics Approach
 
-An adaptive risky-choice paradigm testing whether **direct semantic priming** —
-reading a risk-encouraging, risk-averse, or neutral linguistic prime — biases
-risky choice, with concurrent EEG to examine the neural response to reward
-feedback. Undergraduate research project (NYU Shanghai DURF), advised by
-Prof. Xing Tian.
+A risky-choice experiment, calibrated to each participant, testing whether
+**direct semantic priming** — reading a risk-encouraging, risk-averse, or neutral
+linguistic prime — biases risky choice. Undergraduate research project
+(NYU Shanghai DURF), advised by Prof. Xing Tian.
 
-> **Scope note.** This project was designed with concurrent EEG, and the EEG
-> paradigm below was fully implemented and used to collect an initial sample. The
-> project was subsequently scoped to its **behavioral** component, so EEG data
-> collection is currently on hold. The EEG code is kept here as a complete,
-> working implementation of the intended design. See *Project status* below.
+> **Scope note.** The project was originally designed with concurrent EEG, and
+> an EEG version of the paradigm is implemented in this repository. The project
+> was scoped to its **behavioral** component before any EEG data were collected,
+> so all results here are behavioral. The EEG code is kept as a working
+> implementation of the intended design. See *Project status* below.
 
 > **Data.** No participant data is included. All raw files contain subject
 > identifiers and are excluded via `.gitignore`, consistent with IRB
-> data-handling requirements. The paradigm regenerates its own stimuli each run.
+> data-handling requirements. The prime images are included in
+> `experiment/stimuli/`.
 
 ---
 
@@ -29,10 +29,10 @@ caution, or neither, and that carries no information about the gamble itself —
 To make the effect measurable rather than swamped by obvious choices, each
 participant's risk preference is first calibrated with an adaptive staircase, and
 the formal task then presents gambles set at that person's own indifference
-point — where any shift in risk preference is most visible. With
-EEG, the question extends to the neural level: does the prime also change how the
-brain responds to the *outcome* of a risky choice, indexed by the reward
-positivity (RewP) to feedback?
+point — where any shift in risk preference is most visible. The planned EEG
+extension (implemented but not yet run) would take the question to the neural
+level: does the prime also change how the brain responds to the *outcome* of a
+risky choice, indexed by the reward positivity (RewP) to feedback?
 
 ---
 
@@ -131,8 +131,8 @@ the source of the analyzed data.
 ## The EEG version (`RiskDM_EEG.py`)
 
 A faithful PsychoPy port of the pilot MATLAB paradigm (identical staircase,
-amounts, and sequencing) with the additions needed for ERP work. It was fully implemented and
-used to collect an initial sample before the project was scoped to behavior.
+amounts, and sequencing) with the additions needed for ERP work. It is fully
+implemented but has not been used to collect data.
 
 **Photodiode triggers.** On the prime frame and on the feedback frame, a 200×200
 white square is drawn in the bottom-left corner *on the same flip* as the
@@ -185,13 +185,15 @@ produces condition comparisons. Highlights:
   in-file `SubID`, to avoid collisions when a subject number was reused; the
   script flags any raw-ID clashes rather than silently merging them.
 - **QC report:** trials per subject, one-condition-per-block check, timeout rate.
-- **Block-level summary:** per-block RG rate, final/initial PSE and their delta,
-  mean RT, timeouts.
-- **Paired tests** across the three conditions (RG rate and Final Alpha) with
-  Cohen's *dz*.
-- **Figures:** RG rate by condition (with within-subject paired lines), PSE
-  violin plots, RT, within-block alpha trajectory, and an exploratory block-order
-  check for fatigue/order effects.
+- **Block-level summary:** per-block RG rate, mean RT, timeouts.
+- **Paired tests** across the three conditions on RG rate, with Cohen's *dz*.
+- **Figures:** RG rate by condition (with within-subject paired lines), RT, and
+  an exploratory block-order check for fatigue/order effects.
+
+> The script also outputs alpha/PSE summaries (`Final_Alpha`, alpha trajectory).
+> These were written for the earlier adaptive pilot. In the formal task the
+> offers are fixed, so those outputs describe the offers shown, not the
+> participant's responses, and are not used as results.
 
 ### Run it
 
@@ -261,8 +263,8 @@ A two-track DURF (visual vs. auditory linguistic priming), run as parallel,
 independent studies with no shared data; this repository covers the **visual
 semantics** track. Behavioral data collection is complete (30 participants after
 exclusion), and the results above come from that sample. The EEG paradigm is fully
-implemented and an initial sample was collected, but the project was subsequently
-scoped to its behavioral component, so EEG collection is currently on hold. The
-design connects psycholinguistics (semantic priming) with neuroeconomics (risky
-choice and reward processing) — asking whether language shifts not only risky
-choice but the neural response to its outcomes.
+implemented, but the project was scoped to its behavioral component before any EEG
+data were collected. The design connects psycholinguistics (semantic priming) with
+neuroeconomics (risky choice and reward processing); the EEG extension would ask
+whether language shifts not only risky choice but also the neural response to its
+outcomes.
